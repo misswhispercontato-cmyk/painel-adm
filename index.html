@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miss Whisper | Dashboard Admin</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg: #0a0a0a;
+            --card: #161616;
+            --text: #ffffff;
+            --green: #2ecc71;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0; padding: 20px;
+        }
+
+        /* TELA DE LOGIN */
+        #login-screen {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: var(--card); padding: 40px; border-radius: 20px;
+            border: 1px solid var(--gold); width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-card input {
+            width: 100%; padding: 12px; margin: 10px 0; background: #222;
+            border: 1px solid #333; color: #fff; border-radius: 8px;
+        }
+        .btn {
+            width: 100%; padding: 12px; background: var(--gold); border: none;
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+
+        /* DASHBOARD */
+        #dashboard { display: none; max-width: 1000px; margin: 0 auto; }
+        
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px;
+        }
+
+        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 12px; flex: 1; border-left: 4px solid var(--gold); }
+
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .filter-btn {
+            padding: 8px 16px; background: #222; border: 1px solid #444; color: #fff;
+            border-radius: 20px; cursor: pointer; white-space: nowrap;
+        }
+        .filter-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+        .message-card {
+            background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px;
+            position: relative; border: 1px solid #222; transition: 0.3s;
+        }
+        .message-card:hover { border-color: var(--gold); }
+
+        .badge-new {
+            width: 12px; height: 12px; background: var(--green); border-radius: 50%;
+            position: absolute; top: 20px; right: 20px;
+            box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .meta { font-size: 0.8rem; color: var(--gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .content { line-height: 1.6; color: #ccc; }
+        .category-tag {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+            background: #333; text-transform: uppercase; margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="font-family: 'Playfair Display'; color: var(--gold);">Miss Whisper Admin</h1>
+            <p style="color: #888; margin-bottom: 20px;">Acesso Restrito</p>
+            <input type="email" id="email" placeholder="E-mail" value="misswhisper.contato@gmail.com">
+            <input type="password" id="pass" placeholder="Senha">
+            <button class="btn" id="btn-login">Entrar no Painel</button>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <header>
+            <h1 style="font-family: 'Playfair Display'; color: var(--gold);">Segredos Recebidos</h1>
+            <button class="filter-btn" id="btn-logout" style="background: #ff4757; border: none;">Sair</button>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <small>Total de Mensagens</small>
+                <h2 id="total-count">0</h2>
+            </div>
+            <div class="stat-card">
+                <small>Novas hoje</small>
+                <h2 id="today-count">0</h2>
+            </div>
+        </div>
+
+        <div class="filters" id="category-filters">
+            <button class="filter-btn active" data-cat="all">Todos</button>
+            <button class="filter-btn" data-cat="fofoca">🔥 Fofocas</button>
+            <button class="filter-btn" data-cat="denuncia">🚨 Denúncias</button>
+            <button class="filter-btn" data-cat="segredo">🤫 Segredos</button>
+        </div>
+
+        <div id="messages-list">
+            </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYCfziffWlHQ5EHEe3F2WWiEGCYqRCBW4",
+            authDomain: "miss-whisper-oficial.firebaseapp.com",
+            projectId: "miss-whisper-oficial",
+            storageBucket: "miss-whisper-oficial.firebasestorage.app",
+            messagingSenderId: "769079227039",
+            appId: "1:769079227039:web:94e83984d7c248bb8ae8aa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const loginScreen = document.getElementById('login-screen');
+        const dashboard = document.getElementById('dashboard');
+        const msgList = document.getElementById('messages-list');
+
+        // LOGIN
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) {
+                alert("Erro ao logar: Verifique e-mail e senha.");
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+        // CONTROLE DE ESTADO
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginScreen.style.display = 'none';
+                dashboard.style.display = 'block';
+                loadMessages();
+            } else {
+                loginScreen.style.display = 'flex';
+                dashboard.style.display = 'none';
+            }
+        });
+
+        // CARREGAR MENSAGENS
+        function loadMessages() {
+            const q = query(collection(db, "mensagens"), orderBy("data_envio", "desc"));
+            
+            // Lista de IDs já vistos (salvo no seu navegador)
+            let vistos = JSON.parse(localStorage.getItem('whisper_vistos') || '[]');
+
+            onSnapshot(q, (snapshot) => {
+                msgList.innerHTML = '';
+                let total = 0;
+                let hoje = 0;
+                const agora = new Date().toDateString();
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    total++;
+                    
+                    const dataFormatada = data.data_envio?.toDate() || new Date();
+                    if(dataFormatada.toDateString() === agora) hoje++;
+
+                    const isNew = !vistos.includes(doc.id);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'message-card';
+                    card.innerHTML = `
+                        ${isNew ? '<div class="badge-new"></div>' : ''}
+                        <div class="meta">
+                            <span><span class="category-tag">${data.categoria}</span> <b>De:</b> ${data.autor}</span>
+                            <span>${dataFormatada.toLocaleString('pt-BR')}</span>
+                        </div>
+                        <div class="content">${data.relato}</div>
+                    `;
+
+                    // Ao clicar na mensagem, ela deixa de ser nova
+                    card.onclick = () => {
+                        if(!vistos.includes(doc.id)) {
+                            vistos.push(doc.id);
+                            localStorage.setItem('whisper_vistos', JSON.stringify(vistos));
+                            loadMessages(); // Atualiza a lista
+                        }
+                    };
+
+                    card.setAttribute('data-category', data.categoria);
+                    msgList.appendChild(card);
+                });
+
+                document.getElementById('total-count').innerText = total;
+                document.getElementById('today-count').innerText = hoje;
+            });
+        }
+
+        // FILTROS
+        document.querySelectorAll('.filter-btn[data-cat]').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const cat = btn.getAttribute('data-cat');
+                const cards = document.querySelectorAll('.message-card');
+                
+                cards.forEach(c => {
+                    if(cat === 'all' || c.getAttribute('data-category') === cat) {
+                        c.style.display = 'block';
+                    } else {
+                        c.style.display = 'none';
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+  </html>
+
