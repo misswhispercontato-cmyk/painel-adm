@@ -16,6 +16,7 @@
             --card: #161616;
             --text: #ffffff;
             --green: #2ecc71;
+            --red: #ff4757;
         }
 
         body {
@@ -25,10 +26,7 @@
             margin: 0; padding: 20px;
         }
 
-        /* TELA DE LOGIN */
-        #login-screen {
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-        }
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
         .login-card {
             background: var(--card); padding: 40px; border-radius: 20px;
             border: 1px solid var(--gold); width: 100%; max-width: 400px; text-align: center;
@@ -37,12 +35,7 @@
             width: 100%; padding: 12px; margin: 10px 0; background: #222;
             border: 1px solid #333; color: #fff; border-radius: 8px;
         }
-        .btn {
-            width: 100%; padding: 12px; background: var(--gold); border: none;
-            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
-        }
 
-        /* DASHBOARD */
         #dashboard { display: none; max-width: 1000px; margin: 0 auto; }
         
         header {
@@ -56,15 +49,15 @@
         .filters { margin-bottom: 20px; display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
         .filter-btn {
             padding: 8px 16px; background: #222; border: 1px solid #444; color: #fff;
-            border-radius: 20px; cursor: pointer; white-space: nowrap;
+            border-radius: 20px; cursor: pointer; white-space: nowrap; transition: 0.3s;
         }
         .filter-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
 
         .message-card {
-            background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px;
+            background: var(--card); padding: 25px; border-radius: 15px; margin-bottom: 15px;
             position: relative; border: 1px solid #222; transition: 0.3s;
         }
-        .message-card:hover { border-color: var(--gold); }
+        .message-card:hover { border-color: var(--gold); background: #1a1a1a; }
 
         .badge-new {
             width: 12px; height: 12px; background: var(--green); border-radius: 50%;
@@ -74,12 +67,27 @@
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .meta { font-size: 0.8rem; color: var(--gold); margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .content { line-height: 1.6; color: #ccc; }
+        .meta { font-size: 0.8rem; color: var(--gold); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .content { line-height: 1.6; color: #ddd; font-size: 1rem; margin-bottom: 15px; }
+        
         .category-tag {
-            font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
-            background: #333; text-transform: uppercase; margin-right: 10px;
+            font-size: 0.7rem; padding: 3px 10px; border-radius: 4px;
+            background: #333; text-transform: uppercase; margin-right: 10px; color: #fff;
         }
+
+        .btn { padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
+        .btn-gold { background: var(--gold); color: #000; }
+        
+        /* Botão Deletar */
+        .btn-delete {
+            background: rgba(255, 71, 87, 0.1); color: var(--red);
+            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--red);
+            cursor: pointer; font-size: 0.8rem; transition: 0.3s;
+            float: right;
+        }
+        .btn-delete:hover { background: var(--red); color: #fff; }
+
+        .card-footer { border-top: 1px solid #222; padding-top: 15px; overflow: hidden; }
     </style>
 </head>
 <body>
@@ -87,45 +95,37 @@
     <div id="login-screen">
         <div class="login-card">
             <h1 style="font-family: 'Playfair Display'; color: var(--gold);">Miss Whisper Admin</h1>
-            <p style="color: #888; margin-bottom: 20px;">Acesso Restrito</p>
             <input type="email" id="email" placeholder="E-mail" value="misswhisper.contato@gmail.com">
             <input type="password" id="pass" placeholder="Senha">
-            <button class="btn" id="btn-login">Entrar no Painel</button>
+            <button class="btn btn-gold" style="width: 100%;" id="btn-login">Entrar no Painel</button>
         </div>
     </div>
 
     <div id="dashboard">
         <header>
-            <h1 style="font-family: 'Playfair Display'; color: var(--gold);">Segredos Recebidos</h1>
-            <button class="filter-btn" id="btn-logout" style="background: #ff4757; border: none;">Sair</button>
+            <h1 style="font-family: 'Playfair Display'; color: var(--gold);">Dashboard Secret</h1>
+            <button class="filter-btn" id="btn-logout" style="background: var(--red); border: none;">Sair</button>
         </header>
 
         <div class="stats">
-            <div class="stat-card">
-                <small>Total de Mensagens</small>
-                <h2 id="total-count">0</h2>
-            </div>
-            <div class="stat-card">
-                <small>Novas hoje</small>
-                <h2 id="today-count">0</h2>
-            </div>
+            <div class="stat-card"><small>Total</small><h2 id="total-count">0</h2></div>
+            <div class="stat-card"><small>Hoje</small><h2 id="today-count">0</h2></div>
         </div>
 
-        <div class="filters" id="category-filters">
+        <div class="filters">
             <button class="filter-btn active" data-cat="all">Todos</button>
             <button class="filter-btn" data-cat="fofoca">🔥 Fofocas</button>
             <button class="filter-btn" data-cat="denuncia">🚨 Denúncias</button>
             <button class="filter-btn" data-cat="segredo">🤫 Segredos</button>
         </div>
 
-        <div id="messages-list">
-            </div>
+        <div id="messages-list"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCYCfziffWlHQ5EHEe3F2WWiEGCYqRCBW4",
@@ -140,104 +140,91 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const loginScreen = document.getElementById('login-screen');
-        const dashboard = document.getElementById('dashboard');
-        const msgList = document.getElementById('messages-list');
+        // Login / Logout
+        document.getElementById('btn-login').addEventListener('click', () => {
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value)
+            .catch(() => alert("Acesso negado!"));
+        });
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
 
-        // LOGIN
-        document.getElementById('btn-login').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) {
-                alert("Erro ao logar: Verifique e-mail e senha.");
-            }
+        onAuthStateChanged(auth, user => {
+            document.getElementById('login-screen').style.display = user ? 'none' : 'flex';
+            document.getElementById('dashboard').style.display = user ? 'block' : 'none';
+            if(user) loadMessages();
         });
 
-        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-
-        // CONTROLE DE ESTADO
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loginScreen.style.display = 'none';
-                dashboard.style.display = 'block';
-                loadMessages();
-            } else {
-                loginScreen.style.display = 'flex';
-                dashboard.style.display = 'none';
+        // Função Deletar
+        window.deleteMsg = async (id) => {
+            if(confirm("Deseja apagar este segredo permanentemente?")) {
+                try {
+                    await deleteDoc(doc(db, "mensagens", id));
+                } catch (e) { alert("Erro ao deletar."); }
             }
-        });
+        };
 
-        // CARREGAR MENSAGENS
         function loadMessages() {
             const q = query(collection(db, "mensagens"), orderBy("data_envio", "desc"));
-            
-            // Lista de IDs já vistos (salvo no seu navegador)
             let vistos = JSON.parse(localStorage.getItem('whisper_vistos') || '[]');
 
             onSnapshot(q, (snapshot) => {
-                msgList.innerHTML = '';
-                let total = 0;
-                let hoje = 0;
-                const agora = new Date().toDateString();
+                const list = document.getElementById('messages-list');
+                list.innerHTML = '';
+                let total = 0, hoje = 0;
+                const hojeStr = new Date().toDateString();
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
                     total++;
-                    
-                    const dataFormatada = data.data_envio?.toDate() || new Date();
-                    if(dataFormatada.toDateString() === agora) hoje++;
+                    const dataEnvio = data.data_envio?.toDate() || new Date();
+                    if(dataEnvio.toDateString() === hojeStr) hoje++;
 
-                    const isNew = !vistos.includes(doc.id);
+                    const isNew = !vistos.includes(id);
                     
-                    const card = document.createElement('div');
-                    card.className = 'message-card';
-                    card.innerHTML = `
+                    const div = document.createElement('div');
+                    div.className = 'message-card';
+                    div.setAttribute('data-category', data.categoria);
+                    div.innerHTML = `
                         ${isNew ? '<div class="badge-new"></div>' : ''}
                         <div class="meta">
-                            <span><span class="category-tag">${data.categoria}</span> <b>De:</b> ${data.autor}</span>
-                            <span>${dataFormatada.toLocaleString('pt-BR')}</span>
+                            <span><span class="category-tag">${data.categoria}</span> <b>${data.autor}</b></span>
+                            <span style="color:#666">${dataEnvio.toLocaleString('pt-BR')}</span>
                         </div>
                         <div class="content">${data.relato}</div>
+                        <div class="card-footer">
+                            <button class="btn-delete" onclick="deleteMsg('${id}')">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </div>
                     `;
 
-                    // Ao clicar na mensagem, ela deixa de ser nova
-                    card.onclick = () => {
-                        if(!vistos.includes(doc.id)) {
-                            vistos.push(doc.id);
+                    div.addEventListener('click', (e) => {
+                        if(e.target.closest('.btn-delete')) return;
+                        if(!vistos.includes(id)) {
+                            vistos.push(id);
                             localStorage.setItem('whisper_vistos', JSON.stringify(vistos));
-                            loadMessages(); // Atualiza a lista
+                            div.querySelector('.badge-new')?.remove();
                         }
-                    };
+                    });
 
-                    card.setAttribute('data-category', data.categoria);
-                    msgList.appendChild(card);
+                    list.appendChild(div);
                 });
-
                 document.getElementById('total-count').innerText = total;
                 document.getElementById('today-count').innerText = hoje;
             });
         }
 
-        // FILTROS
+        // Filtros
         document.querySelectorAll('.filter-btn[data-cat]').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const cat = btn.getAttribute('data-cat');
-                const cards = document.querySelectorAll('.message-card');
-                
-                cards.forEach(c => {
-                    if(cat === 'all' || c.getAttribute('data-category') === cat) {
-                        c.style.display = 'block';
-                    } else {
-                        c.style.display = 'none';
-                    }
+                const cat = btn.dataset.cat;
+                document.querySelectorAll('.message-card').forEach(card => {
+                    card.style.display = (cat === 'all' || card.dataset.category === cat) ? 'block' : 'none';
                 });
             };
         });
     </script>
 </body>
-  </html>
-
+</html>
